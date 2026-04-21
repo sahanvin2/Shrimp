@@ -1,8 +1,8 @@
-import { getVideoById, listVideos } from './mockStore.js';
+import { getVideoById, listVideos } from './catalog.service.js';
 
 export async function fetchVideo(id) {
   try {
-    return getVideoById(id);
+    return await getVideoById(id);
   } catch (error) {
     throw error;
   }
@@ -10,7 +10,7 @@ export async function fetchVideo(id) {
 
 export async function fetchRelatedVideos() {
   try {
-    return listVideos().slice(0, 10);
+    return await listVideos(10);
   } catch (error) {
     throw error;
   }

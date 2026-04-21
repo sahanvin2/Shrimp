@@ -1,8 +1,8 @@
-import { listVideos } from './mockStore.js';
+import { listVideos } from './catalog.service.js';
 
 export async function buildForYouFeed() {
   try {
-    return listVideos().slice(0, 20);
+    return await listVideos(20);
   } catch (error) {
     throw error;
   }

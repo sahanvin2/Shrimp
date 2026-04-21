@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { listVideos } from '../services/mockStore.js';
+import { listVideos } from '../services/catalog.service.js';
 
 const router = Router();
 
 router.get('/rss.xml', async (req, res) => {
   try {
-    const items = listVideos()
+    const items = (await listVideos(20))
       .slice(0, 20)
       .map((video) => `
         <item>
@@ -25,7 +25,7 @@ router.get('/rss.xml', async (req, res) => {
 
 router.get('/sitemap.xml', async (req, res) => {
   try {
-    const urls = listVideos()
+    const urls = (await listVideos(50))
       .slice(0, 50)
       .map((video) => `<url><loc>https://shrimp.app/video/${video.id}/${video.slug}</loc></url>`)
       .join('');
