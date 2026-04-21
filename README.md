@@ -26,6 +26,13 @@ Public pages are server-rendered so search engines receive indexable HTML, canon
 1. Copy the environment files:
 
    ```bash
+   copy server\.env.example server\.env
+   copy client\.env.local.example client\.env.local
+   ```
+
+   On macOS/Linux use:
+
+   ```bash
    cp server/.env.example server/.env
    cp client/.env.local.example client/.env.local
    ```
@@ -41,6 +48,7 @@ Public pages are server-rendered so search engines receive indexable HTML, canon
 4. Run Prisma migration and seed data:
 
    ```bash
+   npm run prisma:generate --workspace server
    npm run db:migrate
    npm run db:seed
    ```
@@ -105,10 +113,12 @@ Server:
 - `ELASTICSEARCH_URL`
 - `JWT_SECRET`
 - `JWT_REFRESH_SECRET`
-- `AWS_REGION`
-- `AWS_S3_BUCKET`
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
+- `B2_ENDPOINT`
+- `B2_ACCESS_KEY_ID`
+- `B2_SECRET_ACCESS_KEY`
+- `B2_BUCKET`
+- `B2_REGION`
+- `B2_PUBLIC_BASE`
 - `CLIENT_URL`
 - `PORT`
 - `NODE_ENV`
@@ -139,6 +149,3 @@ Client:
 ## License
 
 MIT
-# Shrimp
-
-Initial project setup.
