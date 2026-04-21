@@ -1,0 +1,250 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(uuid())
+  username        String   @unique
+  displayName     String
+  email           String   @unique
+  passwordHash    String
+  avatarUrl       String?
+  bannerUrl       String?
+  bio             String?  @db.Text
+  website         String?
+  isCreator       Boolean  @default(false)
+  isVerified      Boolean  @default(false)
+  isAdmin         Boolean  @default(false)
+  creatorTier     String?
+  totalViews      BigInt   @default(0)
+  subscriberCount Int      @default(0)
+  totalLikes      BigInt   @default(0)
+  country         String?
+  language        String   @default("en")
+  privacySettings Json     @default("{}")
+  notifSettings   Json     @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  lastActiveAt    DateTime?
+
+  videos         Video[]
+  comments       Comment[]
+  likes          Like[]
+  saves          Save[]
+  watchHistory   WatchHistory[]
+  followers      Follow[] @relation("following")
+  following      Follow[] @relation("follower")
+  notifications  Notification[]
+  events         UserEvent[]
+  refreshTokens  RefreshToken[]
+  reports        Report[]
+
+  @@index([username])
+  @@index([isCreator, subscriberCount])
+}
+
+model Video {
+  id              String   @id @default(uuid())
+  slug            String
+  creatorId       String
+  creator         User     @relation(fields: [creatorId], references: [id])
+  title           String
+  description     String?  @db.Text
+  tags            String[]
+  thumbnailUrl    String?
+  hlsUrl          String?
+  rawStorageKey   String?
+  duration        Float?
+  width           Int?
+  height          Int?
+  aspectRatio     String?
+  status          String   @default("processing")
+  visibility      String   @default("public")
+  allowComments   Boolean  @default(true)
+  allowDownload   Boolean  @default(false)
+  allowDuet       Boolean  @default(true)
+  viewCount       BigInt   @default(0)
+  likeCount       Int      @default(0)
+  commentCount    Int      @default(0)
+  saveCount       Int      @default(0)
+  shareCount      Int      @default(0)
+  avgWatchPercent Float    @default(0)
+  trendingScore   Float    @default(0)
+  qualityVariants Json?
+  subtitleUrl     String?
+  locationTag     String?
+  musicId         String?
+  isAd            Boolean  @default(false)
+  isPinned        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  publishedAt     DateTime?
+
+  hashtags       VideoHashtag[]
+  comments       Comment[]
+  likes          Like[]
+  saves          Save[]
+  watchHistory   WatchHistory[]
+  events         UserEvent[]
+  reports        Report[]
+
+  @@index([creatorId, publishedAt])
+  @@index([status, visibility, publishedAt])
+  @@index([trendingScore])
+  @@index([slug])
+}
+
+model Follow {
+  followerId      String
+  followingId     String
+  follower        User     @relation("follower", fields: [followerId], references: [id])
+  following       User     @relation("following", fields: [followingId], references: [id])
+  createdAt       DateTime @default(now())
+  notificationsOn Boolean  @default(true)
+
+  @@id([followerId, followingId])
+  @@index([followingId])
+  @@index([followerId])
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  videoId   String
+  user      User     @relation(fields: [userId], references: [id])
+  video     Video    @relation(fields: [videoId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, videoId])
+  @@index([videoId, createdAt])
+}
+
+model Save {
+  id           String   @id @default(uuid())
+  userId       String
+  videoId      String
+  collectionId  String?
+  user         User     @relation(fields: [userId], references: [id])
+  video        Video    @relation(fields: [videoId], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, videoId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  videoId   String
+  userId    String
+  parentId  String?
+  body      String   @db.Text
+  likeCount Int      @default(0)
+  isPinned  Boolean  @default(false)
+  isHidden  Boolean  @default(false)
+  video     Video    @relation(fields: [videoId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  parent    Comment? @relation("replies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("replies")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([videoId, isPinned, createdAt])
+}
+
+model WatchHistory {
+  id             String   @id @default(uuid())
+  userId         String
+  videoId        String
+  watchPercent   Float    @default(0)
+  watchedSeconds Float    @default(0)
+  completedAt    DateTime?
+  sessionId      String?
+  deviceType     String?
+  user           User     @relation(fields: [userId], references: [id])
+  video          Video    @relation(fields: [videoId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([videoId])
+}
+
+model UserEvent {
+  id         String   @id @default(uuid())
+  userId     String?
+  sessionId  String
+  videoId    String?
+  eventType  String
+  payload    Json
+  deviceType String?
+  platform   String?
+  appVersion String?
+  ipHash     String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id])
+  video      Video?   @relation(fields: [videoId], references: [id])
+
+  @@index([userId, eventType, createdAt])
+  @@index([videoId, eventType])
+  @@index([sessionId])
+}
+
+model Hashtag {
+  id         String   @id @default(uuid())
+  tag        String   @unique
+  videoCount Int      @default(0)
+  trendScore Float    @default(0)
+  videos     VideoHashtag[]
+
+  @@index([trendScore])
+}
+
+model VideoHashtag {
+  videoId   String
+  hashtagId String
+  video     Video    @relation(fields: [videoId], references: [id])
+  hashtag   Hashtag  @relation(fields: [hashtagId], references: [id])
+
+  @@id([videoId, hashtagId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  actorId   String?
+  type      String
+  videoId   String?
+  commentId String?
+  isRead    Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead, createdAt])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model Report {
+  id         String   @id @default(uuid())
+  reporterId String
+  videoId    String?
+  reason     String
+  details    String?
+  status     String   @default("pending")
+  reporter   User     @relation(fields: [reporterId], references: [id])
+  video      Video?   @relation(fields: [videoId], references: [id])
+  createdAt  DateTime @default(now())
+}
