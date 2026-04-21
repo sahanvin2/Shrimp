@@ -1,0 +1,3 @@
+# Shrimp
+
+Initial project setup.
